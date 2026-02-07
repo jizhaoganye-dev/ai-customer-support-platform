@@ -1,44 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npm run build",
-  "framework": "nextjs",
-  "installCommand": "npm install",
-  "devCommand": "npm run dev",
-  "regions": ["hnd1"],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, must-revalidate"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/backend/:path*",
-      "destination": "https://your-backend-url.railway.app/api/:path*"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/docs",
-      "destination": "/api/docs",
-      "permanent": false
-    }
-  ]
+  "framework": "nextjs"
 }
