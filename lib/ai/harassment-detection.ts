@@ -405,7 +405,7 @@ function determineRecommendation(
 function generateExplanation(
   score: number,
   severity: 'low' | 'medium' | 'high' | 'critical' | null,
-  flags: string[]
+  _flags: string[]
 ): string {
   if (score === 0) {
     return '問題となる表現は検出されませんでした。'
