@@ -259,13 +259,27 @@ export function detectHarassment(message: string): {
     if (normalized.includes(kw)) { detected.push(kw); maxSeverity = 'critical'; score = Math.max(score, 1.0) }
   }
   for (const kw of HARASSMENT_KEYWORDS.high) {
-    if (normalized.includes(kw)) { detected.push(kw); if (maxSeverity !== 'critical') maxSeverity = 'high'; score = Math.max(score, 0.8) }
+    if (normalized.includes(kw)) {
+      detected.push(kw)
+      const s = maxSeverity as string
+      if (s !== 'critical') maxSeverity = 'high'
+      score = Math.max(score, 0.8)
+    }
   }
   for (const kw of HARASSMENT_KEYWORDS.medium) {
-    if (normalized.includes(kw)) { detected.push(kw); if (maxSeverity === 'none' || maxSeverity === 'low') maxSeverity = 'medium'; score = Math.max(score, 0.5) }
+    if (normalized.includes(kw)) {
+      detected.push(kw)
+      const s = maxSeverity as string
+      if (s === 'none' || s === 'low') maxSeverity = 'medium'
+      score = Math.max(score, 0.5)
+    }
   }
   for (const kw of HARASSMENT_KEYWORDS.low) {
-    if (normalized.includes(kw)) { detected.push(kw); if (maxSeverity === 'none') maxSeverity = 'low'; score = Math.max(score, 0.3) }
+    if (normalized.includes(kw)) {
+      detected.push(kw)
+      if (maxSeverity === 'none') maxSeverity = 'low'
+      score = Math.max(score, 0.3)
+    }
   }
 
   return { score, severity: maxSeverity, detectedKeywords: [...new Set(detected)] }
