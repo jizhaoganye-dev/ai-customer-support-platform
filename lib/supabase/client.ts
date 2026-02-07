@@ -97,7 +97,8 @@ export async function checkUserRole(
 ): Promise<boolean> {
   const profile = await getUserProfile(userId)
   if (!profile) return false
-  return allowedRoles.includes(profile.role)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return allowedRoles.includes((profile as any).role)
 }
 
 // ============================================================================
