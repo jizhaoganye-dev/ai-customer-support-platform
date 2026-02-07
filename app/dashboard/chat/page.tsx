@@ -9,7 +9,7 @@ interface Message {
   role: 'user' | 'ai' | 'system'
   content: string
   timestamp: Date
-  harassment?: { score: number; severity: string; keywords: string[] }
+  harassment?: { score: number; severity: string; detectedKeywords: string[] }
 }
 
 function generateAIResponse(userMessage: string): string {
@@ -141,7 +141,7 @@ export default function ChatPage() {
                           msg.harassment.severity === 'medium' ? 'bg-amber-100 text-amber-700' :
                           'bg-yellow-100 text-yellow-700'
                         }`}>
-                          ハラスメントスコア: {(msg.harassment.score * 100).toFixed(0)}%
+                          ハラスメント: {(msg.harassment.score * 100).toFixed(0)}%
                         </span>
                       )}
                       <span className="text-xs text-slate-400">{msg.timestamp.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}</span>
