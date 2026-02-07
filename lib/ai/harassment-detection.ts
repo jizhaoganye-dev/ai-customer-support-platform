@@ -202,7 +202,8 @@ function performKeywordScan(message: string): KeywordScanResult {
     for (const keyword of HARASSMENT_KEYWORDS.high) {
       if (normalizedMessage.includes(keyword)) {
         flags.push(`high_keyword:${keyword}`)
-        if (!maxSeverity || maxSeverity === 'low' || maxSeverity === 'medium') {
+        const sev = maxSeverity as string | null
+        if (!sev || sev === 'low' || sev === 'medium') {
           maxSeverity = 'high'
         }
         score = Math.max(score, 0.8)
@@ -216,7 +217,8 @@ function performKeywordScan(message: string): KeywordScanResult {
     for (const keyword of HARASSMENT_KEYWORDS.medium) {
       if (normalizedMessage.includes(keyword)) {
         flags.push(`medium_keyword:${keyword}`)
-        if (!maxSeverity || maxSeverity === 'low') {
+        const sev = maxSeverity as string | null
+        if (!sev || sev === 'low') {
           maxSeverity = 'medium'
         }
         score = Math.max(score, 0.5)
