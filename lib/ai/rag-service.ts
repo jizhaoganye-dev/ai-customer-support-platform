@@ -66,18 +66,19 @@ export async function searchFAQDocuments(
     const { createServerSupabaseClient } = await import('@/lib/supabase/client')
     const supabase = createServerSupabaseClient()
 
-    const { data, error } = await supabase.rpc('match_faq_documents', {
+    const { data, error } = await supabase.rpc('match_faq_documents' as never, {
       query_embedding: queryEmbedding,
       match_threshold: threshold,
       match_count: limit,
-    })
+    } as never)
 
     if (error) {
       console.error('FAQ search error:', error)
       return []
     }
 
-    return data.map((doc: any) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return ((data as any[]) || []).map((doc) => ({
       documentId: doc.id,
       title: doc.title,
       content: doc.content,
