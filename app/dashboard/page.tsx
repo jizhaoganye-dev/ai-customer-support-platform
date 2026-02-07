@@ -1,232 +1,144 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useMemo } from 'react'
+import { CONVERSATIONS, ANALYTICS_DATA } from '@/lib/mock-data'
+import { formatDate } from '@/lib/utils'
 
-export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<'conversations' | 'analytics' | 'settings'>('conversations')
+export default function DashboardOverview() {
+  const stats = useMemo(() => {
+    const recent = ANALYTICS_DATA.slice(-7)
+    const totalConv = recent.reduce((s, d) => s + d.conversations, 0)
+    const totalResolved = recent.reduce((s, d) => s + d.resolved, 0)
+    const avgResponse = +(recent.reduce((s, d) => s + d.avgResponseTime, 0) / recent.length).toFixed(1)
+    const totalHarass = recent.reduce((s, d) => s + d.harassmentDetected, 0)
+    const avgSatisfaction = +(recent.reduce((s, d) => s + d.satisfactionScore, 0) / recent.length).toFixed(1)
+    return { totalConv, totalResolved, resolveRate: Math.round(totalResolved / totalConv * 100), avgResponse, totalHarass, avgSatisfaction }
+  }, [])
+
+  const activeConversations = CONVERSATIONS.filter(c => c.status === 'active' || c.status === 'escalated')
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">
-                🤖 AI Support Platform
-              </h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                デモユーザー
-              </span>
-              <button
-                onClick={() => (window.location.href = '/')}
-                className="text-sm text-red-600 hover:text-red-700 font-medium"
-              >
-                ログアウト
-              </button>
-            </div>
+    <div className="space-y-6 animate-fade-in">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="今週の会話数" value={stats.totalConv.toString()} change="+12%" positive icon="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" color="blue" />
+        <StatCard label="解決率" value={`${stats.resolveRate}%`} change="+3%" positive icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" color="green" />
+        <StatCard label="平均応答時間" value={`${stats.avgResponse}分`} change="-15%" positive icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" color="amber" />
+        <StatCard label="カスハラ検知" value={`${stats.totalHarass}件`} change={stats.totalHarass > 5 ? '注意' : '正常'} positive={stats.totalHarass <= 5} icon="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" color="red" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Active Conversations */}
+        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="font-semibold text-slate-900">対応中の会話</h2>
+            <span className="text-xs font-medium bg-brand-50 text-brand-700 px-2.5 py-1 rounded-full">{activeConversations.length}件</span>
           </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* タブナビゲーション */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-          <div className="flex border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab('conversations')}
-              className={`px-6 py-4 text-sm font-medium ${
-                activeTab === 'conversations'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              💬 会話履歴
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={`px-6 py-4 text-sm font-medium ${
-                activeTab === 'analytics'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              📊 分析
-            </button>
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`px-6 py-4 text-sm font-medium ${
-                activeTab === 'settings'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              ⚙️ 設定
-            </button>
-          </div>
-
-          <div className="p-6">
-            {activeTab === 'conversations' && (
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-4">
-                  会話履歴
-                </h2>
-                <div className="space-y-4">
-                  {/* サンプル会話 */}
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition cursor-pointer"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-semibold text-gray-900">
-                            顧客 {i}
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            customer{i}@example.com
-                          </p>
-                        </div>
-                        <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
-                          解決済み
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-700 mb-2">
-                        商品の配送について問い合わせがありました...
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span>🕐 2時間前</span>
-                        <span>💬 5 メッセージ</span>
-                        <span className="text-green-600">✓ カスハラなし</span>
-                      </div>
-                    </div>
-                  ))}
+          <div className="divide-y divide-slate-100">
+            {activeConversations.map((conv) => (
+              <div key={conv.id} className="px-5 py-4 hover:bg-slate-50 transition cursor-pointer">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-medium text-slate-900 text-sm">{conv.customerName}</p>
+                    <p className="text-sm text-slate-600 mt-0.5">{conv.subject}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {conv.harassmentScore > 0.5 && (
+                      <span className="px-2 py-0.5 text-xs font-medium bg-red-50 text-red-700 rounded-full">カスハラ疑い</span>
+                    )}
+                    <PriorityBadge priority={conv.priority} />
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-slate-500">
+                  <span>{formatDate(conv.lastMessageAt)}</span>
+                  <span>{conv.messageCount}メッセージ</span>
+                  <span>担当: {conv.assignedTo}</span>
                 </div>
               </div>
-            )}
-
-            {activeTab === 'analytics' && (
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-6">
-                  分析ダッシュボード
-                </h2>
-                
-                {/* 統計カード */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                    <p className="text-sm text-blue-600 font-medium">総会話数</p>
-                    <p className="text-3xl font-bold text-blue-900 mt-2">1,234</p>
-                    <p className="text-xs text-blue-600 mt-1">↑ 12% vs 先月</p>
-                  </div>
-                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                    <p className="text-sm text-green-600 font-medium">解決率</p>
-                    <p className="text-3xl font-bold text-green-900 mt-2">94%</p>
-                    <p className="text-xs text-green-600 mt-1">↑ 3% vs 先月</p>
-                  </div>
-                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                    <p className="text-sm text-yellow-600 font-medium">平均応答時間</p>
-                    <p className="text-3xl font-bold text-yellow-900 mt-2">1.2分</p>
-                    <p className="text-xs text-yellow-600 mt-1">↓ 15% vs 先月</p>
-                  </div>
-                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                    <p className="text-sm text-red-600 font-medium">カスハラ検知</p>
-                    <p className="text-3xl font-bold text-red-900 mt-2">8件</p>
-                    <p className="text-xs text-red-600 mt-1">0.6% 発生率</p>
-                  </div>
-                </div>
-
-                {/* 機能説明 */}
-                <div className="bg-white p-6 rounded-lg border border-gray-200">
-                  <h3 className="font-semibold text-gray-900 mb-4">
-                    📊 実装済み機能
-                  </h3>
-                  <ul className="space-y-2 text-sm text-gray-700">
-                    <li>✅ RAGベースFAQチャットボット（セマンティック検索）</li>
-                    <li>✅ リアルタイムカスハラ検知システム（95%+精度）</li>
-                    <li>✅ 感情分析とセンチメントトラッキング</li>
-                    <li>✅ チームパフォーマンスメトリクス</li>
-                    <li>✅ 自動エスカレーション推奨</li>
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'settings' && (
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-6">
-                  設定
-                </h2>
-                
-                <div className="space-y-6">
-                  <div className="bg-white p-6 rounded-lg border border-gray-200">
-                    <h3 className="font-semibold text-gray-900 mb-4">
-                      🔐 セキュリティ設定
-                    </h3>
-                    <ul className="space-y-2 text-sm text-gray-700">
-                      <li>✅ Row Level Security (RLS) 有効</li>
-                      <li>✅ JWT 認証</li>
-                      <li>✅ API レート制限</li>
-                      <li>✅ 監査ログ記録</li>
-                    </ul>
-                  </div>
-
-                  <div className="bg-white p-6 rounded-lg border border-gray-200">
-                    <h3 className="font-semibold text-gray-900 mb-4">
-                      🤖 AI設定
-                    </h3>
-                    <ul className="space-y-2 text-sm text-gray-700">
-                      <li>• モデル: GPT-4 Turbo</li>
-                      <li>• ベクトル検索: pgvector (1536次元)</li>
-                      <li>• カスハラ検知閾値: 0.7</li>
-                      <li>• 応答信頼度下限: 0.75</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
+            ))}
           </div>
         </div>
 
-        {/* ポートフォリオ情報 */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow-lg p-6 text-white">
-          <h3 className="text-lg font-bold mb-2">
-            🎯 ポートフォリオプロジェクト
-          </h3>
-          <p className="text-sm opacity-90 mb-4">
-            このプロジェクトはバレットグループ株式会社応募用のポートフォリオです。
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <p className="opacity-75">コード行数</p>
-              <p className="font-bold text-lg">5,100+</p>
-            </div>
-            <div>
-              <p className="opacity-75">ファイル数</p>
-              <p className="font-bold text-lg">28</p>
-            </div>
-            <div>
-              <p className="opacity-75">技術スタック</p>
-              <p className="font-bold text-lg">8+</p>
-            </div>
-            <div>
-              <p className="opacity-75">ドキュメント</p>
-              <p className="font-bold text-lg">5,500+行</p>
+        {/* Quick Stats / Activity */}
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl border border-slate-200 p-5">
+            <h3 className="font-semibold text-slate-900 mb-4">顧客満足度</h3>
+            <div className="text-center">
+              <p className="text-4xl font-bold text-brand-600">{stats.avgSatisfaction}</p>
+              <p className="text-sm text-slate-500 mt-1">/ 5.0</p>
+              <div className="flex justify-center gap-1 mt-3">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <svg key={star} className={`w-5 h-5 ${star <= Math.round(stats.avgSatisfaction) ? 'text-amber-400' : 'text-slate-200'}`} fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
             </div>
           </div>
-          <div className="mt-4 pt-4 border-t border-white/20">
-            <Link
-              href="https://github.com/yourusername/ai-customer-support-platform"
-              target="_blank"
-              className="inline-flex items-center gap-2 text-sm hover:underline"
-            >
-              📦 GitHubで確認 →
-            </Link>
+
+          <div className="bg-white rounded-xl border border-slate-200 p-5">
+            <h3 className="font-semibold text-slate-900 mb-3">直近のアクティビティ</h3>
+            <div className="space-y-3">
+              {[
+                { text: '高橋 誠の会話をエスカレーション', time: '1時間前', type: 'warning' },
+                { text: '鈴木 美咲の問い合わせを解決', time: '3時間前', type: 'success' },
+                { text: '新規会話: 渡辺 翔太', time: '4時間前', type: 'info' },
+                { text: 'カスハラ検知アラート発生', time: '5時間前', type: 'danger' },
+              ].map((activity, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
+                    activity.type === 'success' ? 'bg-emerald-500' :
+                    activity.type === 'warning' ? 'bg-amber-500' :
+                    activity.type === 'danger' ? 'bg-red-500' : 'bg-blue-500'
+                  }`} />
+                  <div>
+                    <p className="text-sm text-slate-700">{activity.text}</p>
+                    <p className="text-xs text-slate-400">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
     </div>
+  )
+}
+
+function StatCard({ label, value, change, positive, icon, color }: {
+  label: string; value: string; change: string; positive: boolean; icon: string; color: string
+}) {
+  const colors: Record<string, string> = {
+    blue: 'bg-blue-50 text-blue-600',
+    green: 'bg-emerald-50 text-emerald-600',
+    amber: 'bg-amber-50 text-amber-600',
+    red: 'bg-red-50 text-red-600',
+  }
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-5">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-medium text-slate-500">{label}</span>
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${colors[color]}`}>
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d={icon} />
+          </svg>
+        </div>
+      </div>
+      <p className="text-2xl font-bold text-slate-900">{value}</p>
+      <p className={`text-xs mt-1 font-medium ${positive ? 'text-emerald-600' : 'text-red-600'}`}>{change}</p>
+    </div>
+  )
+}
+
+function PriorityBadge({ priority }: { priority: string }) {
+  const styles: Record<string, string> = {
+    low: 'bg-slate-100 text-slate-600',
+    medium: 'bg-blue-50 text-blue-700',
+    high: 'bg-amber-50 text-amber-700',
+    critical: 'bg-red-50 text-red-700',
+  }
+  const labels: Record<string, string> = { low: '低', medium: '中', high: '高', critical: '緊急' }
+  return (
+    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${styles[priority]}`}>{labels[priority]}</span>
   )
 }
