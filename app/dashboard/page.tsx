@@ -2,20 +2,65 @@
 
 import { useMemo } from 'react'
 import { CONVERSATIONS, ANALYTICS_DATA } from '@/lib/mock-data'
+import { useConversationStore } from '@/lib/conversation-store'
 import { formatDate } from '@/lib/utils'
 
 export default function DashboardOverview() {
+  const { liveConversations, harassmentEvents, getRecentHarassmentEvents } = useConversationStore()
+
+  // Combine mock + live data for real-time stats
   const stats = useMemo(() => {
     const recent = ANALYTICS_DATA.slice(-7)
-    const totalConv = recent.reduce((s, d) => s + d.conversations, 0)
+    const totalConv = recent.reduce((s, d) => s + d.conversations, 0) + liveConversations.length
     const totalResolved = recent.reduce((s, d) => s + d.resolved, 0)
     const avgResponse = +(recent.reduce((s, d) => s + d.avgResponseTime, 0) / recent.length).toFixed(1)
-    const totalHarass = recent.reduce((s, d) => s + d.harassmentDetected, 0)
     const avgSatisfaction = +(recent.reduce((s, d) => s + d.satisfactionScore, 0) / recent.length).toFixed(1)
-    return { totalConv, totalResolved, resolveRate: Math.round(totalResolved / totalConv * 100), avgResponse, totalHarass, avgSatisfaction }
-  }, [])
 
-  const activeConversations = CONVERSATIONS.filter(c => c.status === 'active' || c.status === 'escalated')
+    // Real-time harassment count: live events only (not mock)
+    const liveHarassCount = harassmentEvents.length
+
+    return { totalConv, totalResolved, resolveRate: Math.round(totalResolved / totalConv * 100), avgResponse, liveHarassCount, avgSatisfaction }
+  }, [liveConversations, harassmentEvents])
+
+  // Merge active conversations from both mock and live
+  const activeConversations = useMemo(() => {
+    const mockActive = CONVERSATIONS.filter(c => c.status === 'active' || c.status === 'escalated').map(c => ({
+      id: c.id, customerName: c.customerName, subject: c.subject,
+      priority: c.priority, harassmentScore: c.harassmentScore,
+      lastMessageAt: c.lastMessageAt, messageCount: c.messageCount,
+      assignedTo: c.assignedTo, isLive: false,
+    }))
+    const liveActive = liveConversations
+      .filter(c => c.status === 'active' || c.status === 'escalated')
+      .map(c => ({
+        id: c.id, customerName: c.customerName, subject: c.subject,
+        priority: c.priority, harassmentScore: c.harassmentScore,
+        lastMessageAt: new Date(c.lastMessageAt), messageCount: c.messages.length,
+        assignedTo: c.assignedTo, isLive: true,
+      }))
+    return [...liveActive, ...mockActive]
+  }, [liveConversations])
+
+  // Recent activities: merge live harassment events + static
+  const recentActivities = useMemo(() => {
+    const liveEvents = getRecentHarassmentEvents(5).map(e => {
+      const ago = Math.round((Date.now() - new Date(e.timestamp).getTime()) / 60000)
+      const timeLabel = ago < 1 ? 'たった今' : ago < 60 ? `${ago}分前` : `${Math.round(ago / 60)}時間前`
+      return {
+        text: `カスハラ検知: ${e.severity === 'critical' ? '🔴 緊急' : e.severity === 'high' ? '🟠 高' : e.severity === 'medium' ? '🟡 中' : '⚪ 低'} [${e.keywords.join(', ')}]`,
+        time: timeLabel,
+        type: 'danger' as const,
+      }
+    })
+
+    const staticActivities = [
+      { text: '高橋 誠の会話をエスカレーション', time: '1時間前', type: 'warning' as const },
+      { text: '鈴木 美咲の問い合わせを解決', time: '3時間前', type: 'success' as const },
+      { text: '新規会話: 渡辺 翔太', time: '4時間前', type: 'info' as const },
+    ]
+
+    return [...liveEvents, ...staticActivities].slice(0, 6)
+  }, [getRecentHarassmentEvents])
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -24,8 +69,35 @@ export default function DashboardOverview() {
         <StatCard label="今週の会話数" value={stats.totalConv.toString()} change="+12%" positive icon="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" color="blue" />
         <StatCard label="解決率" value={`${stats.resolveRate}%`} change="+3%" positive icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" color="green" />
         <StatCard label="平均応答時間" value={`${stats.avgResponse}分`} change="-15%" positive icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" color="amber" />
-        <StatCard label="カスハラ検知" value={`${stats.totalHarass}件`} change={stats.totalHarass > 5 ? '注意' : '正常'} positive={stats.totalHarass <= 5} icon="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" color="red" />
+        <StatCard
+          label="カスハラ検知"
+          value={`${stats.liveHarassCount}件`}
+          change={stats.liveHarassCount > 0 ? `リアルタイム検知` : '検知なし'}
+          positive={stats.liveHarassCount === 0}
+          icon="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+          color="red"
+        />
       </div>
+
+      {/* Live Harassment Alert Banner */}
+      {stats.liveHarassCount > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-4 flex items-start gap-3">
+          <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-red-800">カスタマーハラスメント検知アラート</p>
+            <p className="text-sm text-red-700 mt-0.5">
+              リアルタイム検知: {stats.liveHarassCount}件のカスハラが検出されています。
+              {harassmentEvents.filter(e => e.severity === 'critical' || e.severity === 'high').length > 0 &&
+                ` うち${harassmentEvents.filter(e => e.severity === 'critical' || e.severity === 'high').length}件は高深刻度です。`
+              }
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Conversations */}
@@ -36,10 +108,18 @@ export default function DashboardOverview() {
           </div>
           <div className="divide-y divide-slate-100">
             {activeConversations.map((conv) => (
-              <div key={conv.id} className="px-5 py-4 hover:bg-slate-50 transition cursor-pointer">
+              <div key={conv.id} className={`px-5 py-4 hover:bg-slate-50 transition cursor-pointer ${conv.isLive ? 'border-l-4 border-l-emerald-500' : ''}`}>
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <p className="font-medium text-slate-900 text-sm">{conv.customerName}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-slate-900 text-sm">{conv.customerName}</p>
+                      {conv.isLive && (
+                        <span className="flex items-center gap-1 px-1.5 py-0.5 text-xs bg-emerald-50 text-emerald-700 rounded-full">
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                          ライブ
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-slate-600 mt-0.5">{conv.subject}</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -56,6 +136,11 @@ export default function DashboardOverview() {
                 </div>
               </div>
             ))}
+            {activeConversations.length === 0 && (
+              <div className="px-5 py-12 text-center text-slate-400">
+                <p>対応中の会話はありません</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -79,12 +164,7 @@ export default function DashboardOverview() {
           <div className="bg-white rounded-xl border border-slate-200 p-5">
             <h3 className="font-semibold text-slate-900 mb-3">直近のアクティビティ</h3>
             <div className="space-y-3">
-              {[
-                { text: '高橋 誠の会話をエスカレーション', time: '1時間前', type: 'warning' },
-                { text: '鈴木 美咲の問い合わせを解決', time: '3時間前', type: 'success' },
-                { text: '新規会話: 渡辺 翔太', time: '4時間前', type: 'info' },
-                { text: 'カスハラ検知アラート発生', time: '5時間前', type: 'danger' },
-              ].map((activity, i) => (
+              {recentActivities.map((activity, i) => (
                 <div key={i} className="flex items-start gap-3">
                   <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
                     activity.type === 'success' ? 'bg-emerald-500' :
@@ -139,6 +219,6 @@ function PriorityBadge({ priority }: { priority: string }) {
   }
   const labels: Record<string, string> = { low: '低', medium: '中', high: '高', critical: '緊急' }
   return (
-    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${styles[priority]}`}>{labels[priority]}</span>
+    <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${styles[priority] || styles.medium}`}>{labels[priority] || priority}</span>
   )
 }
