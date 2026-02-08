@@ -11,6 +11,17 @@ export interface LiveMessage {
   harassmentScore?: number
   harassmentSeverity?: string
   harassmentKeywords?: string[]
+  sentiment?: 'positive' | 'neutral' | 'negative' | 'anger'
+}
+
+export interface HandoffContext {
+  summary: string
+  detectedIssues: string[]
+  orderNumbers: string[]
+  sentiment: string
+  harassmentLevel: string
+  messageCount: number
+  handoffTime: string
 }
 
 export interface LiveConversation {
@@ -23,6 +34,9 @@ export interface LiveConversation {
   assignedTo: string
   harassmentScore: number
   sentimentScore: number
+  currentSentiment?: 'positive' | 'neutral' | 'negative' | 'anger'
+  angerDetected?: boolean
+  handoffContext?: HandoffContext
   createdAt: string
   lastMessageAt: string
   tags: string[]
