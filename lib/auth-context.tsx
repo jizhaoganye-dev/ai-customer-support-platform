@@ -42,37 +42,61 @@ const DEMO_USERS: Record<string, User> = {
   },
 }
 
+// Safe localStorage helpers - only execute on client
+function getStoredUser(): User | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const stored = window.localStorage.getItem('auth_user')
+    return stored ? JSON.parse(stored) : null
+  } catch {
+    return null
+  }
+}
+
+function setStoredUser(user: User): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem('auth_user', JSON.stringify(user))
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function removeStoredUser(): void {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.removeItem('auth_user')
+  } catch {
+    // ignore storage errors
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
+  // Load user from localStorage only on client mount
   useEffect(() => {
-    const stored = localStorage.getItem('auth_user')
+    const stored = getStoredUser()
     if (stored) {
-      try {
-        setUser(JSON.parse(stored))
-      } catch {
-        localStorage.removeItem('auth_user')
-      }
+      setUser(stored)
     }
     setIsLoading(false)
   }, [])
 
   const login = useCallback(async (email: string, _password: string): Promise<boolean> => {
     setIsLoading(true)
-    // Simulate network delay
     await new Promise((r) => setTimeout(r, 800))
 
     const demoUser = DEMO_USERS[email]
     if (demoUser) {
       setUser(demoUser)
-      localStorage.setItem('auth_user', JSON.stringify(demoUser))
+      setStoredUser(demoUser)
       setIsLoading(false)
       return true
     }
 
-    // Allow any email to login for demonstration
     const newUser: User = {
       id: `usr_${Date.now()}`,
       email,
@@ -82,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       joinedAt: new Date().toISOString().split('T')[0],
     }
     setUser(newUser)
-    localStorage.setItem('auth_user', JSON.stringify(newUser))
+    setStoredUser(newUser)
     setIsLoading(false)
     return true
   }, [])
@@ -100,14 +124,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       joinedAt: new Date().toISOString().split('T')[0],
     }
     setUser(newUser)
-    localStorage.setItem('auth_user', JSON.stringify(newUser))
+    setStoredUser(newUser)
     setIsLoading(false)
     return true
   }, [])
 
   const logout = useCallback(() => {
     setUser(null)
-    localStorage.removeItem('auth_user')
+    removeStoredUser()
     router.push('/')
   }, [router])
 
