@@ -343,3 +343,97 @@ export function detectHarassment(message: string): {
 
   return { score, severity: maxSeverity, detectedKeywords: [...new Set(detected)] }
 }
+
+// --- Sentiment Analysis (simulating Gemini 2.0 inference) ---
+const ANGER_KEYWORDS = [
+  'ふざけ', 'ふざけるな', 'ふざけんな', 'いい加減', 'いいかげん',
+  '怒', '腹立', '腹が立つ', '頭にくる', '頭にきた', '許さない', '許せない',
+  'ありえない', 'あり得ない', '信じられない', '最悪', 'さいあく',
+  '何回', '何度', '同じこと', 'いつまで', 'いつになったら',
+  '遅い', '遅すぎ', '待たせ', '放置',
+  ...HARASSMENT_KEYWORDS.critical,
+  ...HARASSMENT_KEYWORDS.high,
+  ...HARASSMENT_KEYWORDS.medium,
+]
+
+const POSITIVE_KEYWORDS = [
+  'ありがとう', '感謝', '助かり', 'ありがたい', '嬉しい', 'うれしい',
+  '素晴らしい', '最高', 'よかった', '良かった', '満足', '完璧',
+  '丁寧', '親切', '迅速', 'さすが',
+]
+
+export function analyzeSentiment(message: string): {
+  sentiment: 'positive' | 'neutral' | 'negative' | 'anger'
+  confidence: number
+  isAnger: boolean
+} {
+  const msg = message.toLowerCase()
+  let angerScore = 0
+  let positiveScore = 0
+  let negativeScore = 0
+
+  for (const kw of ANGER_KEYWORDS) {
+    if (msg.includes(kw.toLowerCase()) || message.includes(kw)) angerScore++
+  }
+  for (const kw of POSITIVE_KEYWORDS) {
+    if (msg.includes(kw.toLowerCase()) || message.includes(kw)) positiveScore++
+  }
+  // Exclamation marks and repeated punctuation increase anger
+  const exclamations = (message.match(/[！!]{1,}/g) || []).length
+  const questionSpam = (message.match(/[？?]{2,}/g) || []).length
+  angerScore += exclamations * 0.5 + questionSpam * 0.3
+
+  if (angerScore >= 2) return { sentiment: 'anger', confidence: Math.min(0.95, 0.6 + angerScore * 0.1), isAnger: true }
+  if (angerScore >= 1) {
+    negativeScore += 1
+    return { sentiment: 'negative', confidence: 0.7, isAnger: false }
+  }
+  if (positiveScore >= 1) return { sentiment: 'positive', confidence: Math.min(0.95, 0.6 + positiveScore * 0.1), isAnger: false }
+  return { sentiment: 'neutral', confidence: 0.5, isAnger: false }
+}
+
+// --- Handoff Context Builder (AI→Human) ---
+export function buildHandoffContext(messages: Array<{ role: string; content: string }>, harassment: { score: number; severity: string }): {
+  summary: string
+  detectedIssues: string[]
+  orderNumbers: string[]
+  sentiment: string
+  harassmentLevel: string
+  messageCount: number
+} {
+  const customerMessages = messages.filter(m => m.role === 'customer' || m.role === 'user')
+  const allText = customerMessages.map(m => m.content).join(' ')
+
+  // Extract order numbers
+  const orderMatches = allText.match(/ORD[-\s]?\d{4}[-\s]?\d{4}|注文番号\s*[:：]?\s*\S+/g) || []
+  const orderNumbers = [...new Set(orderMatches)]
+
+  // Detect issues
+  const issues: string[] = []
+  if (allText.match(/配送|届か|届い|遅延|遅れ/)) issues.push('配送問題')
+  if (allText.match(/返品|返却|交換/)) issues.push('返品・交換')
+  if (allText.match(/不良|壊れ|故障|破損/)) issues.push('商品不良')
+  if (allText.match(/請求|料金|支払|返金/)) issues.push('請求・返金')
+  if (allText.match(/キャンセル|取消/)) issues.push('キャンセル')
+  if (harassment.score > 0.5) issues.push('カスハラ対応')
+  if (issues.length === 0) issues.push('一般問い合わせ')
+
+  // Build summary
+  const lastSentiment = analyzeSentiment(customerMessages[customerMessages.length - 1]?.content || '')
+  const summaryParts = [
+    `お客様から${customerMessages.length}件のメッセージ。`,
+    issues.length > 0 ? `主な問題: ${issues.join('、')}。` : '',
+    orderNumbers.length > 0 ? `注文番号: ${orderNumbers.join(', ')}。` : '',
+    harassment.score > 0.5 ? `⚠️ カスハラ検知（${harassment.severity}）。` : '',
+    `現在の感情: ${lastSentiment.sentiment === 'anger' ? '怒り' : lastSentiment.sentiment === 'negative' ? '不満' : lastSentiment.sentiment === 'positive' ? '良好' : '中立'}。`,
+  ]
+
+  return {
+    summary: summaryParts.filter(Boolean).join(' '),
+    detectedIssues: issues,
+    orderNumbers,
+    sentiment: lastSentiment.sentiment,
+    harassmentLevel: harassment.severity,
+    messageCount: customerMessages.length,
+  }
+}
