@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { CONVERSATIONS, CHAT_MESSAGES_001 } from '@/lib/mock-data'
-import { useConversationStore, type LiveConversation } from '@/lib/conversation-store'
+import { useConversationStore } from '@/lib/conversation-store'
 import { formatDate } from '@/lib/utils'
 
 // Unified conversation type for display
