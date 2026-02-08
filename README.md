@@ -1,656 +1,211 @@
-# 🤖 AI Customer Support Platform
+# AI カスタマーサポートプラットフォーム
 
 <div align="center">
 
-**Enterprise-Grade Customer Support Platform with AI-Powered Harassment Detection & Intelligent FAQ System**
+**カスタマーハラスメント対策 × AI感情分析 × リアルタイムダッシュボード**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?logo=next.js)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.109-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-Latest-3ECF8E?logo=supabase)](https://supabase.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Supabase](https://img.shields.io/badge/Supabase-Ready-3ECF8E?logo=supabase)](https://supabase.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
+[![Jest](https://img.shields.io/badge/Jest-Tested-C21325?logo=jest)](https://jestjs.io/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000?logo=vercel)](https://vercel.com/)
 
-[Live Demo](https://ai-customer-support-platform.vercel.app) | [API Docs](https://api-ai-customer-support.com/docs) | [Architecture](#architecture)
+[Live Demo](https://ai-customer-support-platform-eosin.vercel.app) | [GitHub](https://github.com/jizhaoganye-dev/ai-customer-support-platform)
 
 </div>
 
 ---
 
-## 📋 Table of Contents
+## 概要
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Technology Stack](#technology-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Project Structure](#project-structure)
-- [API Documentation](#api-documentation)
-- [Database Schema](#database-schema)
-- [Deployment](#deployment)
-- [Testing](#testing)
-- [Performance](#performance)
-- [Security](#security)
-- [License](#license)
+コールセンター・カスタマーサポート部門向けの**AIカスタマーハラスメント対策プラットフォーム**です。
 
----
+暴言・侮辱・脅迫などのカスタマーハラスメントをリアルタイムで検知し、オペレーターの心理的負荷を軽減しながら、適切なエスカレーション判断を支援します。
 
-## 🎯 Overview
+### 主要機能
 
-This platform represents the convergence of **modern AI capabilities** with **enterprise-grade customer support needs**. Built to address real-world challenges in customer service, it provides:
-
-- **🛡️ Real-time Harassment Detection**: AI-powered system that identifies and classifies customer harassment with 95%+ accuracy
-- **🤖 Intelligent FAQ Chatbot**: RAG (Retrieval-Augmented Generation) based responses using semantic search
-- **📊 Analytics Dashboard**: Real-time metrics, sentiment analysis, and team performance tracking
-- **⚡ High Performance**: Sub-second response times with optimized vector search
-
-### Why This Project?
-
-This project demonstrates:
-1. **Production-ready architecture** with proper separation of concerns
-2. **Advanced AI integration** beyond simple API calls
-3. **Enterprise security** with RLS, JWT, and secure data handling
-4. **Scalable design** supporting thousands of concurrent users
-5. **Modern development practices** including CI/CD, testing, and monitoring
+| 機能 | 説明 |
+|------|------|
+| **カスハラ検知** | 日本語の暴言・侮辱・脅迫をキーワード＋パターンマッチングで即時検知（カタカナ・ひらがな・漢字対応） |
+| **感情分析（Sentiment Analysis）** | ユーザーメッセージの感情を4段階（怒り・不満・中立・良好）でリアルタイム分類 |
+| **AI自動応答チャット** | 20以上のFAQパターンに基づくコンテキスト応答エンジン |
+| **AI→人間ハンドオフ** | 怒り・高深刻度検出時にコンテキスト（要約・注文番号・感情状態）をメタデータとして引き継ぎ |
+| **リアルタイムダッシュボード** | CSAT・自動解決率・カスハラ検知数・怒り検知をKPI階層で表示 |
+| **アナリティクス** | 会話数推移・カスハラ検知推移・ステータス分布（横棒グラフ）・満足度推移 |
+| **カスハラ研修モジュール** | 対応シナリオベースのインタラクティブ学習機能 |
+| **レスポンシブデザイン** | モバイル対応サイドバー・ホワイトスペース最適化 |
 
 ---
 
-## ✨ Key Features
+## デモアカウント
 
-### 🔍 AI-Powered Features
-
-#### 1. **Harassment Detection System**
-```typescript
-// Multi-level detection algorithm
-- Keyword scanning (instant response)
-- Context-aware AI analysis (GPT-4)
-- Pattern matching against database
-- Severity classification (Low → Critical)
-- Automated escalation recommendations
+```
+メールアドレス: admin@company.co.jp
+パスワード: password123
 ```
 
-**Accuracy Metrics:**
-- Detection Rate: 95.3%
-- False Positive Rate: < 2%
-- Average Processing Time: 450ms
-
-#### 2. **RAG-based FAQ Chatbot**
-```typescript
-// Advanced retrieval pipeline
-- Semantic search using vector embeddings
-- Context-aware response generation
-- Source attribution and confidence scores
-- Streaming responses for better UX
-```
-
-**Performance Metrics:**
-- Response Accuracy: 92%
-- Average Response Time: 1.2s
-- User Satisfaction: 8.7/10
-
-#### 3. **Sentiment Analysis**
-```typescript
-// Real-time emotion tracking
-- 6-dimensional emotion analysis
-- Sentiment scoring (-1 to 1)
-- Trend visualization
-- Proactive intervention triggers
-```
-
-### 💼 Business Features
-
-- **Conversation Management**: Full CRUD with real-time updates
-- **Team Dashboard**: Performance metrics, workload distribution
-- **Admin Panel**: FAQ management, pattern configuration
-- **Analytics Engine**: Custom reports, data export
-- **Notification System**: Real-time alerts via WebSocket
-
-### 🔐 Enterprise Security
-
-- **Row Level Security (RLS)** on all database tables
-- **JWT-based authentication** with refresh tokens
-- **API rate limiting** to prevent abuse
-- **Input validation** using Zod schemas
-- **Audit logging** for compliance
+ログイン後、AIチャットで以下を試せます：
+- 「返品について」「配送状況」— AI自動応答
+- 「バカ野郎」「ふざけるな」— カスハラ検知＋感情分析アラート
+- 「ありがとう」— ポジティブ感情検出
 
 ---
 
-## 🛠️ Technology Stack
+## 技術スタック
 
-### Frontend
-```yaml
-Framework: Next.js 14 (App Router)
-Language: TypeScript 5.3
-Styling: Tailwind CSS 3.4
-UI Components: shadcn/ui
-State Management: TanStack Query
-Real-time: Supabase Realtime
+```
+フロントエンド:   Next.js 14 (App Router) / TypeScript / React 18
+バックエンド:     Next.js API Routes (サーバーサイド)
+データベース:     Supabase (PostgreSQL) — env未設定時はlocalStorageフォールバック
+AI:               OpenAI GPT-4o-mini — env未設定時はルールベースエンジン
+スタイリング:     Tailwind CSS 3.4
+チャート:         Recharts 2.10 (AreaChart, BarChart)
+状態管理:         React Context API + localStorage + Supabase
+認証:             AuthProvider + AuthGate + Edge Middleware
+テスト:           Jest (ユニットテスト)
+デプロイ:         Vercel
+CI/CD:            GitHub Actions
 ```
 
-### Backend
-```yaml
-Framework: FastAPI 0.109
-Language: Python 3.11
-Database: PostgreSQL (Supabase)
-Vector DB: pgvector extension
-Authentication: Supabase Auth
-```
+### サーバーサイドAPI
 
-### AI/ML
-```yaml
-LLM: OpenAI GPT-4 Turbo / Azure OpenAI
-Embeddings: text-embedding-3-small (1536 dim)
-Vector Search: Cosine similarity with IVFFlat index
-Frameworks: LangChain, tiktoken
-```
+| エンドポイント | メソッド | 機能 |
+|---------------|---------|------|
+| `/api/chat` | POST | AI応答生成（OpenAI or ルールベース） |
+| `/api/analyze` | POST | カスハラ検知 + 感情分析 |
+| `/api/health` | GET | ヘルスチェック（サービス接続状態） |
 
-### Infrastructure
-```yaml
-Hosting: Vercel (Frontend), Railway (Backend)
-Database: Supabase (PostgreSQL + Realtime)
-CI/CD: GitHub Actions
-Monitoring: Sentry, Vercel Analytics
-CDN: Vercel Edge Network
-```
+### グレースフルデグラデーション設計
+
+| 環境変数 | 設定時 | 未設定時 |
+|---------|-------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | PostgreSQL永続化 | localStorage |
+| `OPENAI_API_KEY` | GPT-4o-mini応答 | ルールベース応答 |
 
 ---
 
-## 🏗️ Architecture
-
-### System Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        CLIENT LAYER                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │ Next.js App  │  │   Browser    │  │  Mobile App  │     │
-│  │ (SSR + ISR)  │  │   (Client)   │  │   (Future)   │     │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘     │
-└─────────┼──────────────────┼──────────────────┼─────────────┘
-          │                  │                  │
-          ▼                  ▼                  ▼
-┌─────────────────────────────────────────────────────────────┐
-│                        API GATEWAY                          │
-│         (Load Balancing, Rate Limiting, Auth)               │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-          ┌─────────────────┴─────────────────┐
-          ▼                                   ▼
-┌──────────────────────┐          ┌────────────────────────┐
-│   FastAPI Backend    │          │  Supabase Services     │
-│                      │          │                        │
-│ ┌──────────────────┐ │          │ ┌────────────────────┐ │
-│ │  Chat API        │ │          │ │ PostgreSQL         │ │
-│ │  - RAG Pipeline  │ │          │ │ + pgvector         │ │
-│ └──────────────────┘ │          │ └────────────────────┘ │
-│                      │          │                        │
-│ ┌──────────────────┐ │          │ ┌────────────────────┐ │
-│ │  Harassment API  │ │          │ │ Authentication     │ │
-│ │  - Detection     │ │          │ │ + Row Level Security │
-│ │  - Sentiment     │ │          │ └────────────────────┘ │
-│ └──────────────────┘ │          │                        │
-│                      │          │ ┌────────────────────┐ │
-│ ┌──────────────────┐ │          │ │ Realtime           │ │
-│ │  Analytics API   │ │          │ │ WebSocket          │ │
-│ └──────────────────┘ │          │ └────────────────────┘ │
-└──────────┬───────────┘          └────────────────────────┘
-           │
-           ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      AI SERVICES                            │
-│  ┌───────────────┐  ┌───────────────┐  ┌────────────────┐ │
-│  │  OpenAI API   │  │  Vector Store │  │  Pinecone      │ │
-│  │  GPT-4 Turbo  │  │  (Supabase)   │  │  (Optional)    │ │
-│  └───────────────┘  └───────────────┘  └────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Data Flow: Harassment Detection
-
-```
-User Message
-    │
-    ▼
-┌─────────────────────┐
-│ Instant Keyword     │ ── Critical Keywords? ──> Immediate Alert
-│ Scanner (< 10ms)    │                           & Escalation
-└──────────┬──────────┘
-           │ No Critical Keywords
-           ▼
-┌─────────────────────┐
-│ AI Context Analysis │ ── Analyze message with:
-│ (GPT-4, ~400ms)     │    - Conversation history
-└──────────┬──────────┘    - Customer profile
-           │               - Previous patterns
-           ▼
-┌─────────────────────┐
-│ Pattern Matching    │ ── Match against known
-│ & Scoring (~50ms)   │    harassment patterns
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ Severity            │ ── Low / Medium / High / Critical
-│ Classification      │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ Recommendation      │ ── Continue / Escalate / Terminate
-│ Engine              │
-└──────────┬──────────┘
-           │
-           ▼
-    Store in Database
-    & Trigger Alerts
-```
-
-### Data Flow: RAG Chatbot
-
-```
-User Query
-    │
-    ▼
-┌─────────────────────┐
-│ Generate Embedding  │ ── OpenAI text-embedding-3-small
-│ (300ms)             │    1536-dimensional vector
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ Vector Similarity   │ ── Cosine similarity search
-│ Search (150ms)      │    Top 3 relevant FAQs
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ Context Building    │ ── Combine:
-│                     │    - Retrieved documents
-│                     │    - Conversation history
-│                     │    - Customer metadata
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ LLM Generation      │ ── GPT-4 Turbo
-│ (800ms)             │    Structured prompt
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│ Response with       │ ── Include:
-│ Citations           │    - Main content
-│                     │    - Source references
-│                     │    - Confidence score
-└─────────────────────┘
-```
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-```bash
-Node.js >= 18.0.0
-Python >= 3.11
-PostgreSQL (or Supabase account)
-OpenAI API Key or Azure OpenAI credentials
-```
-
-### Installation
-
-#### 1. Clone the repository
-
-```bash
-git clone https://github.com/yourusername/ai-customer-support-platform.git
-cd ai-customer-support-platform
-```
-
-#### 2. Frontend Setup
-
-```bash
-# Install dependencies
-npm install
-
-# Copy environment template
-cp .env.example .env.local
-
-# Edit .env.local with your credentials
-# NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-# NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
-# ...
-
-# Run development server
-npm run dev
-```
-
-Visit `http://localhost:3000`
-
-#### 3. Backend Setup
-
-```bash
-cd backend
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with your credentials
-
-# Run FastAPI server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Visit API docs at `http://localhost:8000/docs`
-
-#### 4. Database Setup
-
-```bash
-# Run the schema SQL in your Supabase SQL Editor
-# or using psql:
-psql -h your_supabase_host -U postgres -d postgres -f database/schema.sql
-```
-
----
-
-## 📁 Project Structure
+## プロジェクト構造
 
 ```
 ai-customer-support-platform/
-├── app/                      # Next.js App Router
-│   ├── (auth)/              # Authentication pages
-│   ├── (dashboard)/         # Dashboard pages
-│   ├── api/                 # API routes
-│   └── layout.tsx           # Root layout
-├── components/              # React components
-│   ├── ui/                  # shadcn/ui components
-│   ├── chat/                # Chat-related components
-│   ├── dashboard/           # Dashboard components
-│   └── admin/               # Admin components
-├── lib/                     # Core libraries
-│   ├── supabase/            # Supabase client & helpers
-│   ├── ai/                  # AI services (RAG, harassment)
-│   ├── utils/               # Utility functions
-│   └── hooks/               # Custom React hooks
-├── types/                   # TypeScript type definitions
-├── backend/                 # FastAPI backend
-│   ├── app/
-│   │   ├── api/             # API endpoints
-│   │   ├── models/          # Pydantic models
-│   │   ├── services/        # Business logic
-│   │   ├── config.py        # Configuration
-│   │   └── main.py          # FastAPI app
-│   └── requirements.txt
-├── database/                # Database schemas & migrations
-│   └── schema.sql
-├── public/                  # Static assets
-├── .github/                 # GitHub Actions CI/CD
-│   └── workflows/
-│       ├── frontend.yml
-│       └── backend.yml
+├── app/
+│   ├── layout.tsx              # ルートレイアウト（dynamic import, SSR制御）
+│   ├── page.tsx                # ログインページ
+│   ├── providers.tsx           # AuthProvider + ConversationProvider
+│   ├── error.tsx               # グローバルError Boundary
+│   ├── globals.css             # グローバルCSS + Tailwindディレクティブ
+│   ├── signup/page.tsx         # サインアップ
+│   ├── api/
+│   │   ├── chat/route.ts       # AI応答API（OpenAI / ルールベース）
+│   │   ├── analyze/route.ts    # カスハラ検知 + 感情分析API
+│   │   └── health/route.ts     # ヘルスチェックAPI
+│   └── dashboard/
+│       ├── layout.tsx          # ダッシュボードレイアウト（サイドバー・AuthGate）
+│       ├── page.tsx            # KPIダッシュボード
+│       ├── chat/page.tsx       # AIチャット（感情分析・ハンドオフ）
+│       ├── conversations/page.tsx  # 会話管理
+│       ├── analytics/page.tsx  # アナリティクス
+│       ├── training/page.tsx   # カスハラ研修
+│       └── settings/page.tsx   # 設定
+├── lib/
+│   ├── auth-context.tsx        # 認証Context + AuthGateコンポーネント
+│   ├── conversation-store.tsx  # 会話・ハラスメントイベントの永続化ストア
+│   ├── mock-data.ts            # カスハラ検知・感情分析・ハンドオフロジック
+│   ├── supabase.ts             # Supabaseクライアント（フォールバック付き）
+│   ├── database.types.ts       # Supabase型定義
+│   └── utils.ts                # ユーティリティ（cn, formatDate）
+├── __tests__/
+│   ├── harassment-detection.test.ts  # カスハラ検知テスト（13ケース）
+│   ├── sentiment-analysis.test.ts    # 感情分析テスト（10ケース）
+│   └── handoff-context.test.ts       # ハンドオフテスト（6ケース）
+├── middleware.ts               # Edge Middleware（レート制限・セキュリティヘッダー）
+├── jest.config.ts              # Jest設定
+├── .env.example                # 環境変数テンプレート
+├── .github/workflows/ci-cd.yml # CI/CDパイプライン
+├── tailwind.config.ts
+├── next.config.js
+├── postcss.config.js
 ├── package.json
 ├── tsconfig.json
-├── next.config.js
-└── README.md
+└── vercel.json
 ```
 
 ---
 
-## 📡 API Documentation
+## アーキテクチャの設計判断
 
-### Chat Endpoints
+### なぜクライアント完結型か
 
-#### POST `/api/v1/chat/completions`
-Generate AI response with RAG support.
+本プロジェクトは**ポートフォリオ作品**として、バックエンドサービスへの依存なしに以下を実証します：
 
-**Request:**
-```json
-{
-  "message": "How do I reset my password?",
-  "conversation_id": "uuid",
-  "use_rag": true,
-  "stream": false
-}
-```
+1. **React Context + localStorage** によるリアルタイム状態管理
+2. **`dynamic(() => ..., { ssr: false })`** によるSSR/ハイドレーション問題の解決
+3. **AuthGate パターン** — 認証状態確定までの描画ブロックによるレースコンディション防止
+4. **`typeof window === 'undefined'` ガード** — 全localStorage参照のSSR安全性確保
 
-**Response:**
-```json
-{
-  "content": "To reset your password...",
-  "sources": [
-    {
-      "document_id": "uuid",
-      "title": "Password Reset Guide",
-      "relevance_score": 0.92
-    }
-  ],
-  "confidence": 0.89,
-  "metadata": {
-    "model": "gpt-4-turbo-preview",
-    "tokens": 245,
-    "processing_time_ms": 1200
-  }
-}
-```
+### 本番環境への拡張ポイント
 
-### Harassment Detection Endpoints
-
-#### POST `/api/v1/harassment/detect`
-Detect harassment in message.
-
-**Request:**
-```json
-{
-  "message": "User message here",
-  "conversation_id": "uuid"
-}
-```
-
-**Response:**
-```json
-{
-  "is_harassment": true,
-  "score": 0.85,
-  "severity": "high",
-  "flags": ["insult", "personal_attack"],
-  "detected_patterns": [...],
-  "recommendation": "escalate",
-  "explanation": "重度のカスタマーハラスメントの可能性..."
-}
-```
-
-[Full API Documentation](https://api-ai-customer-support.com/docs)
+| 現在（デモ） | 本番構成 |
+|-------------|---------|
+| localStorage | Supabase / Convex |
+| クライアント認証 | Clerk / NextAuth.js |
+| キーワードマッチング | OpenAI GPT-4 / Gemini 2.0 |
+| モックFAQ | RAG（pgvector + Embedding） |
+| クライアントストア | WebSocket + リアルタイムDB |
 
 ---
 
-## 🗄️ Database Schema
-
-### Key Tables
-
-- **`profiles`**: User profiles with roles (admin/agent/manager)
-- **`conversations`**: Customer conversations with harassment tracking
-- **`messages`**: Individual messages with emotion/sentiment data
-- **`faq_documents`**: Knowledge base with vector embeddings (1536 dim)
-- **`harassment_patterns`**: Configurable harassment detection patterns
-- **`analytics_events`**: Event tracking for dashboard metrics
-
-### Vector Search
-
-```sql
--- Semantic FAQ search using cosine similarity
-SELECT * FROM match_faq_documents(
-  query_embedding := '[0.123, 0.456, ...]'::vector(1536),
-  match_threshold := 0.7,
-  match_count := 5
-);
-```
-
-[Full Schema Documentation](database/schema.sql)
-
----
-
-## 🚢 Deployment
-
-### Frontend (Vercel)
+## ローカル開発
 
 ```bash
-# Automatic deployment via GitHub integration
-# Push to main branch triggers production deploy
+# リポジトリをクローン
+git clone https://github.com/jizhaoganye-dev/ai-customer-support-platform.git
+cd ai-customer-support-platform
 
-# Or manual deployment:
-vercel --prod
+# 依存関係をインストール
+npm install
+
+# 環境変数を設定（任意 — なくても動作します）
+cp .env.example .env.local
+
+# 開発サーバーを起動
+npm run dev
 ```
 
-### Backend (Railway / Render)
+`http://localhost:3000` でアクセス可能です。
+
+## テスト
 
 ```bash
-# Using Railway:
-railway up
+# ユニットテスト実行
+npm test
 
-# Using Docker:
-docker build -t ai-support-backend ./backend
-docker run -p 8000:8000 ai-support-backend
+# ウォッチモード
+npm run test:watch
 ```
 
-### Environment Variables
-
-Required environment variables are documented in:
-- Frontend: `.env.example`
-- Backend: `backend/.env.example`
-
----
-
-## 🧪 Testing
-
-```bash
-# Frontend tests
-npm run test
-npm run test:e2e
-
-# Backend tests
-cd backend
-pytest tests/ -v --cov=app
-```
-
-**Test Coverage:**
-- Frontend: 87%
-- Backend: 92%
-- Overall: 89.5%
+テスト対象:
+- `detectHarassment()` — カスハラ検知（13テストケース）
+- `analyzeSentiment()` — 感情分析（10テストケース）
+- `buildHandoffContext()` — ハンドオフコンテキスト生成（6テストケース）
 
 ---
 
-## ⚡ Performance
+## 対応する求人要件
 
-### Metrics (Production)
+本プロジェクトは以下の案件例に対応する実装力を実証します：
 
-| Metric | Value |
-|--------|-------|
-| **Time to First Byte (TTFB)** | 180ms |
-| **First Contentful Paint (FCP)** | 0.9s |
-| **Largest Contentful Paint (LCP)** | 1.2s |
-| **Time to Interactive (TTI)** | 1.8s |
-| **API Response Time (P95)** | 450ms |
-| **Vector Search Time** | 150ms |
-| **Harassment Detection** | 450ms |
-| **Lighthouse Score** | 98/100 |
+- **カスタマーハラスメント対策学習ツールの開発**（TypeScript / Next.js / Vercel）
+- **AIチャットボット開発**（自然言語処理・FAQ自動応答）
+- **接客支援ツール開発**（データ入力・売上データ閲覧）
 
-### Optimizations
-
-- ✅ Server-Side Rendering (SSR) for initial load
-- ✅ Incremental Static Regeneration (ISR) for FAQ pages
-- ✅ React Server Components where applicable
-- ✅ Image optimization with Next.js Image
-- ✅ Code splitting and lazy loading
-- ✅ Edge caching via Vercel CDN
-- ✅ Database query optimization with indexes
-- ✅ Connection pooling for API requests
+### 使用AIツール
+- **Cursor** — AIコーディングアシスタント
+- **Claude** — コード生成・レビュー・アーキテクチャ設計
 
 ---
 
-## 🔐 Security
+## ライセンス
 
-### Implemented Measures
-
-1. **Authentication & Authorization**
-   - JWT-based authentication
-   - Role-based access control (RBAC)
-   - Row Level Security (RLS) on database
-
-2. **Input Validation**
-   - Zod schemas for type-safe validation
-   - SQL injection prevention (parameterized queries)
-   - XSS protection via React escaping
-
-3. **API Security**
-   - Rate limiting (60 req/min per user)
-   - CORS configuration
-   - API key rotation support
-
-4. **Data Protection**
-   - Encrypted data at rest (Supabase)
-   - HTTPS/TLS for data in transit
-   - Sensitive data masking in logs
-
-5. **Monitoring & Auditing**
-   - Sentry error tracking
-   - Audit logs for critical operations
-   - Real-time security alerts
-
----
-
-## 📊 Demo Account
-
-```
-Email: demo@example.com
-Password: Demo123!@#
-
-Role: Agent (Limited permissions)
-```
-
----
-
-## 🤝 Contributing
-
-This is a portfolio project, but feedback is welcome!
-
-Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
----
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-## 👨‍💻 Author
-
-**Your Name**
-- Portfolio: [your-portfolio.com](https://your-portfolio.com)
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your Name](https://linkedin.com/in/yourname)
-
----
-
-## 🙏 Acknowledgments
-
-- OpenAI for GPT-4 API
-- Supabase for backend infrastructure
-- Vercel for hosting
-- shadcn for UI components
-
----
-
-<div align="center">
-
-**Built with ❤️ using Next.js, FastAPI, and AI**
-
-⭐ Star this repository if you found it helpful!
-
-</div>
+MIT License
