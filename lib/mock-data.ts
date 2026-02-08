@@ -238,11 +238,69 @@ export const ANALYTICS_DATA: AnalyticsData[] = Array.from({ length: 30 }, (_, i)
 })
 
 // --- Harassment Detection Keywords ---
+// All variants: kanji, katakana, hiragana, compound forms
 export const HARASSMENT_KEYWORDS = {
-  critical: ['殺す', '死ね', '殴る', '潰す', 'ぶっ殺す'],
-  high: ['馬鹿', 'アホ', '無能', 'クズ', 'ゴミ', '頭おかしい', '頭が悪い'],
-  medium: ['お前', 'ふざけるな', '誠意を見せろ', '上を出せ', '訴える', '拡散する', '晒す'],
-  low: ['最低', 'ありえない', '使えない', '話にならない', '二度と買わない'],
+  critical: [
+    '殺す', 'ころす', 'コロス',
+    '死ね', 'しね', 'シネ',
+    '殴る', 'なぐる', 'ナグル',
+    '潰す', 'つぶす', 'ツブス',
+    'ぶっ殺す', 'ぶっころす', 'ブッコロス',
+    '殺してやる', '殴ってやる', '刺す', 'さす',
+    '火をつける', '爆破',
+  ],
+  high: [
+    '馬鹿', 'バカ', 'ばか', 'バカヤロウ', 'バカ野郎', 'ばかやろう', '馬鹿野郎',
+    'アホ', 'あほ', 'アホか',
+    '無能', 'むのう',
+    'クズ', 'くず', '屑',
+    'ゴミ', 'ごみ', 'ゴミクズ', 'ごみくず',
+    '頭おかしい', '頭がおかしい', 'あたまおかしい',
+    '頭が悪い', '頭悪い', 'あたまわるい',
+    'キチガイ', 'きちがい', '基地外',
+    'クソ', 'くそ', 'クソが', 'くそが', 'クソ野郎', 'くそやろう',
+    'ボケ', 'ぼけ', 'ボケが',
+    'カス', 'かす',
+    'タヒね', 'タヒ',
+    '知恵遅れ', '低脳', '低能',
+    'うざい', 'ウザい', 'ウザイ', 'うぜえ', 'ウゼェ',
+    'きもい', 'キモい', 'キモイ', 'きめえ',
+    'ブス', 'ぶす', 'デブ', 'でぶ',
+    'ハゲ', 'はげ',
+  ],
+  medium: [
+    'お前', 'おまえ', 'オマエ', 'てめえ', 'テメェ', 'テメエ', 'てめぇ',
+    'ふざけるな', 'ふざけんな', 'フザケルナ', 'ふざけんじゃねえ',
+    '誠意を見せろ', '誠意みせろ', 'せいいをみせろ',
+    '上を出せ', '上出せ', '上の者を出せ', '上のやつ出せ', '責任者出せ', '責任者を出せ',
+    '訴える', 'うったえる', '訴えるぞ', '訴訟',
+    '拡散する', '拡散するぞ', 'ネットに書く', 'SNSに書く',
+    '晒す', 'さらす', '晒すぞ', 'さらすぞ',
+    'なめてんのか', 'ナメてんのか', '舐めてんのか', 'なめんな', 'ナメんな',
+    'いい加減にしろ', 'いいかげんにしろ',
+    '何様', 'なにさま',
+    'やる気あるのか', 'やる気あんのか',
+    '土下座しろ', '土下座', 'どげざ',
+    '弁償しろ', 'べんしょう',
+    'ただじゃすまない', 'タダじゃすまない', 'ただではすまない',
+    '覚えとけ', 'おぼえとけ', '覚悟しろ',
+  ],
+  low: [
+    '最低', 'さいてい', 'サイテー',
+    'ありえない', 'あり得ない', 'アリエナイ',
+    '使えない', 'つかえない',
+    '話にならない', '話にならん',
+    '二度と買わない', 'にどと',
+    'がっかり', 'ガッカリ',
+    '信じられない', '信じられん',
+    '呆れた', 'あきれた', 'アキレタ',
+    'ひどい', 'ヒドイ', '酷い',
+    'いらいら', 'イライラ',
+    'もういい', 'もういいよ',
+    'ダメだ', 'だめだ', 'ダメすぎ',
+    '期待はずれ', '期待外れ',
+    'ふつうありえない',
+  ],
 }
 
 export function detectHarassment(message: string): {
@@ -250,36 +308,37 @@ export function detectHarassment(message: string): {
   severity: 'none' | 'low' | 'medium' | 'high' | 'critical'
   detectedKeywords: string[]
 } {
+  // Normalize: keep original case for Japanese, lowercase for latin
   const normalized = message.toLowerCase()
   const detected: string[] = []
   let maxSeverity: 'none' | 'low' | 'medium' | 'high' | 'critical' = 'none'
   let score = 0
 
-  for (const kw of HARASSMENT_KEYWORDS.critical) {
-    if (normalized.includes(kw)) { detected.push(kw); maxSeverity = 'critical'; score = Math.max(score, 1.0) }
-  }
-  for (const kw of HARASSMENT_KEYWORDS.high) {
-    if (normalized.includes(kw)) {
-      detected.push(kw)
-      const s = maxSeverity as string
-      if (s !== 'critical') maxSeverity = 'high'
-      score = Math.max(score, 0.8)
+  const severityLevels: Array<{ level: 'critical' | 'high' | 'medium' | 'low'; baseScore: number }> = [
+    { level: 'critical', baseScore: 1.0 },
+    { level: 'high', baseScore: 0.8 },
+    { level: 'medium', baseScore: 0.5 },
+    { level: 'low', baseScore: 0.3 },
+  ]
+
+  const severityOrder = { none: 0, low: 1, medium: 2, high: 3, critical: 4 }
+
+  for (const { level, baseScore } of severityLevels) {
+    for (const kw of HARASSMENT_KEYWORDS[level]) {
+      // Check both original message and normalized (lowercased) version
+      if (message.includes(kw) || normalized.includes(kw.toLowerCase())) {
+        detected.push(kw)
+        if (severityOrder[level] > severityOrder[maxSeverity]) {
+          maxSeverity = level
+        }
+        score = Math.max(score, baseScore)
+      }
     }
   }
-  for (const kw of HARASSMENT_KEYWORDS.medium) {
-    if (normalized.includes(kw)) {
-      detected.push(kw)
-      const s = maxSeverity as string
-      if (s === 'none' || s === 'low') maxSeverity = 'medium'
-      score = Math.max(score, 0.5)
-    }
-  }
-  for (const kw of HARASSMENT_KEYWORDS.low) {
-    if (normalized.includes(kw)) {
-      detected.push(kw)
-      if (maxSeverity === 'none') maxSeverity = 'low'
-      score = Math.max(score, 0.3)
-    }
+
+  // Bonus: multiple keywords detected = higher score
+  if (detected.length >= 3) {
+    score = Math.min(1.0, score + 0.1)
   }
 
   return { score, severity: maxSeverity, detectedKeywords: [...new Set(detected)] }
