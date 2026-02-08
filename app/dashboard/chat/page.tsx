@@ -88,7 +88,7 @@ function generateAIResponse(userMessage: string): string {
 
 export default function ChatPage() {
   const { user } = useAuth()
-  const { addConversation, addMessage, liveConversations } = useConversationStore()
+  const { addConversation, addMessage } = useConversationStore()
   const [currentConvId, setCurrentConvId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([
     {
