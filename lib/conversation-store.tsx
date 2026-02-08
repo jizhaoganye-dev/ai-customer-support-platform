@@ -59,23 +59,21 @@ const ConversationContext = createContext<ConversationStore | null>(null)
 const STORAGE_KEY = 'ai-support-live-conversations'
 const HARASSMENT_EVENTS_KEY = 'ai-support-harassment-events'
 
+// Safe localStorage helpers - guarded for SSR safety
 function loadFromStorage<T>(key: string): T[] {
   if (typeof window === 'undefined') return []
   try {
-    const stored = localStorage.getItem(key)
-    if (stored) {
-      return JSON.parse(stored)
-    }
+    const stored = window.localStorage.getItem(key)
+    return stored ? JSON.parse(stored) : []
   } catch {
-    // ignore parse errors
+    return []
   }
-  return []
 }
 
 function saveToStorage<T>(key: string, data: T[]) {
   if (typeof window === 'undefined') return
   try {
-    localStorage.setItem(key, JSON.stringify(data))
+    window.localStorage.setItem(key, JSON.stringify(data))
   } catch {
     // ignore storage errors
   }
