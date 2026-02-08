@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google'
 import dynamic from 'next/dynamic'
 import './globals.css'
 
-const Providers = dynamic(() => import('./providers').then(mod => mod.Providers), {
+const Providers = dynamic(() => import('./providers'), {
   ssr: false,
 })
 
