@@ -1,12 +1,15 @@
 'use client'
 
 import { AuthProvider } from '@/lib/auth-context'
+import { ConversationProvider } from '@/lib/conversation-store'
 import { type ReactNode } from 'react'
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
-      {children}
+      <ConversationProvider>
+        {children}
+      </ConversationProvider>
     </AuthProvider>
   )
 }
