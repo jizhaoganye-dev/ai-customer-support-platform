@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { detectHarassment } from '@/lib/mock-data'
 import { useAuth } from '@/lib/auth-context'
+import { useConversationStore, type LiveMessage } from '@/lib/conversation-store'
 
 interface Message {
   id: string
@@ -87,6 +88,8 @@ function generateAIResponse(userMessage: string): string {
 
 export default function ChatPage() {
   const { user } = useAuth()
+  const { addConversation, addMessage, liveConversations } = useConversationStore()
+  const [currentConvId, setCurrentConvId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -108,6 +111,42 @@ export default function ChatPage() {
     scrollToBottom()
   }, [messages, isTyping, scrollToBottom])
 
+  // Helper to create a live message for the store
+  const toLiveMessage = (role: 'customer' | 'ai' | 'agent', content: string, harassment?: { score: number; severity: string; detectedKeywords: string[] }): LiveMessage => ({
+    id: `live_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    role,
+    content,
+    timestamp: new Date().toISOString(),
+    harassmentScore: harassment?.score,
+    harassmentSeverity: harassment?.severity,
+    harassmentKeywords: harassment?.detectedKeywords,
+  })
+
+  // Ensure a conversation exists for this chat session
+  const ensureConversation = useCallback((firstMessage: string): string => {
+    if (currentConvId) return currentConvId
+
+    const id = `live_conv_${Date.now()}`
+    const subject = firstMessage.length > 30 ? firstMessage.slice(0, 30) + '...' : firstMessage
+    addConversation({
+      id,
+      customerName: 'チャット顧客',
+      customerEmail: 'chat-customer@example.com',
+      subject,
+      status: 'active',
+      priority: 'medium',
+      assignedTo: user?.fullName || '田中 太郎',
+      harassmentScore: 0,
+      sentimentScore: 0,
+      createdAt: new Date().toISOString(),
+      lastMessageAt: new Date().toISOString(),
+      tags: ['AIチャット', 'リアルタイム'],
+      messages: [],
+    })
+    setCurrentConvId(id)
+    return id
+  }, [currentConvId, addConversation, user])
+
   const handleSend = async () => {
     if (!input.trim() || isTyping) return
 
@@ -126,6 +165,10 @@ export default function ChatPage() {
     }
 
     setMessages(prev => [...prev, userMessage])
+
+    // Save to shared conversation store
+    const convId = ensureConversation(userMsg)
+    addMessage(convId, toLiveMessage('customer', userMsg, harassment.score > 0 ? harassment : undefined))
 
     // Show harassment alert if detected
     if (harassment.severity === 'critical' || harassment.severity === 'high') {
@@ -152,6 +195,10 @@ export default function ChatPage() {
 
     setIsTyping(false)
     setMessages(prev => [...prev, aiMessage])
+
+    // Save AI response to shared store
+    addMessage(convId, toLiveMessage('ai', aiResponse))
+
     inputRef.current?.focus()
   }
 
