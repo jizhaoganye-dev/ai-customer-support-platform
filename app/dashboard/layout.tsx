@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth, AuthGate } from '@/lib/auth-context'
@@ -27,8 +27,22 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // AuthGate guarantees user is non-null here
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false)
+  }, [pathname])
+
+  // Close mobile menu on resize to desktop
+  useEffect(() => {
+    const handler = () => {
+      if (window.innerWidth >= 1024) setMobileMenuOpen(false)
+    }
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+
   if (!user) return null
 
   const isActive = (href: string) => {
@@ -37,18 +51,37 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
+    <div className="min-h-screen bg-slate-50">
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 bg-black/40 z-40 lg:hidden" onClick={() => setMobileMenuOpen(false)} />
+      )}
+
+      {/* Sidebar — desktop: fixed, mobile: overlay drawer */}
       <aside className={cn(
-        'fixed inset-y-0 left-0 z-30 bg-white border-r border-slate-200 flex flex-col transition-all duration-200',
-        sidebarCollapsed ? 'w-16' : 'w-60'
+        'fixed inset-y-0 left-0 z-50 bg-white border-r border-slate-200 flex flex-col transition-all duration-200',
+        // Mobile: off-canvas drawer
+        'lg:translate-x-0',
+        mobileMenuOpen ? 'translate-x-0' : '-translate-x-full',
+        // Desktop: collapsible
+        sidebarCollapsed ? 'lg:w-16' : 'lg:w-60',
+        'w-64'
       )}>
         {/* Logo */}
-        <div className="h-16 flex items-center px-4 border-b border-slate-100">
-          <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3" /></svg>
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-100">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3" /></svg>
+            </div>
+            {!sidebarCollapsed && <span className="ml-3 font-bold text-slate-900 text-sm hidden lg:inline">AI Support</span>}
+            <span className="ml-3 font-bold text-slate-900 text-sm lg:hidden">AI Support</span>
           </div>
-          {!sidebarCollapsed && <span className="ml-3 font-bold text-slate-900 text-sm">AI Support</span>}
+          {/* Close button on mobile */}
+          <button onClick={() => setMobileMenuOpen(false)} className="lg:hidden p-1 rounded-md hover:bg-slate-100 text-slate-400">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* Navigation */}
@@ -64,13 +97,14 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
               </svg>
-              {!sidebarCollapsed && <span>{item.label}</span>}
+              {/* Desktop: hide label when collapsed, Mobile: always show */}
+              <span className={cn(sidebarCollapsed ? 'hidden lg:hidden' : 'lg:inline', 'inline')}>{item.label}</span>
             </Link>
           ))}
         </nav>
 
-        {/* User / Collapse */}
-        <div className="border-t border-slate-100 p-3">
+        {/* Collapse toggle (desktop only) */}
+        <div className="border-t border-slate-100 p-3 hidden lg:block">
           <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-slate-500 hover:bg-slate-50 transition text-sm">
             <svg className={cn('w-5 h-5 transition-transform', sidebarCollapsed && 'rotate-180')} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -82,16 +116,28 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <div className={cn('flex-1 flex flex-col transition-all duration-200', sidebarCollapsed ? 'ml-16' : 'ml-60')}>
+      <div className={cn(
+        'flex flex-col min-h-screen transition-all duration-200',
+        // Desktop: offset by sidebar width
+        sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60',
+        // Mobile: no offset (sidebar is overlay)
+        'ml-0'
+      )}>
         {/* Header */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-20">
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900">
+        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            {/* Hamburger (mobile only) */}
+            <button onClick={() => setMobileMenuOpen(true)} className="lg:hidden p-1.5 rounded-lg hover:bg-slate-100 text-slate-600">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            </button>
+            <h1 className="text-base sm:text-lg font-semibold text-slate-900">
               {NAV_ITEMS.find(item => isActive(item.href))?.label || 'ダッシュボード'}
             </h1>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-brand-700">{user.fullName.charAt(0)}</span>
               </div>
@@ -101,14 +147,14 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
             <button onClick={logout}
-              className="text-sm text-slate-500 hover:text-red-600 transition px-3 py-1.5 rounded-lg hover:bg-red-50">
+              className="text-xs sm:text-sm text-slate-500 hover:text-red-600 transition px-2 sm:px-3 py-1.5 rounded-lg hover:bg-red-50">
               ログアウト
             </button>
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-6">
+        {/* Page Content with generous whitespace */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>
