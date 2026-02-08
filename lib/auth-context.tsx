@@ -149,3 +149,77 @@ export function useAuth() {
   }
   return context
 }
+
+// --- AuthGate: blocks rendering until auth state is determined ---
+interface AuthGateProps {
+  children: ReactNode
+  /** Content to show while auth is loading. Defaults to a spinner. */
+  fallback?: ReactNode
+  /** If true, redirect unauthenticated users to login. Default: true */
+  requireAuth?: boolean
+  /** Redirect path for unauthenticated users. Default: '/' */
+  redirectTo?: string
+}
+
+export function AuthGate({
+  children,
+  fallback,
+  requireAuth = true,
+  redirectTo = '/',
+}: AuthGateProps) {
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+  const [hasRedirected, setHasRedirected] = useState(false)
+
+  useEffect(() => {
+    // Only act once loading is complete
+    if (isLoading) return
+
+    if (requireAuth && !user && !hasRedirected) {
+      setHasRedirected(true)
+      router.push(redirectTo)
+    }
+  }, [isLoading, user, requireAuth, redirectTo, router, hasRedirected])
+
+  // Phase 1: Auth is still loading — show fallback, block all children
+  if (isLoading) {
+    return (
+      <>
+        {fallback || (
+          <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <svg className="animate-spin h-8 w-8 text-brand-600" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-sm text-slate-500">認証情報を確認中...</span>
+            </div>
+          </div>
+        )}
+      </>
+    )
+  }
+
+  // Phase 2: Auth determined, but user is not authenticated
+  if (requireAuth && !user) {
+    // Show fallback while redirect is in progress
+    return (
+      <>
+        {fallback || (
+          <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+              <svg className="animate-spin h-8 w-8 text-brand-600" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-sm text-slate-500">ログインページへ移動中...</span>
+            </div>
+          </div>
+        )}
+      </>
+    )
+  }
+
+  // Phase 3: Authenticated — render children (queries can now safely execute)
+  return <>{children}</>
+}
