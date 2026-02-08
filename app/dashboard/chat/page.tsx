@@ -88,7 +88,7 @@ function generateAIResponse(userMessage: string): string {
 
 export default function ChatPage() {
   const { user } = useAuth()
-  const { addConversation, addMessage } = useConversationStore()
+  const { addConversation, addMessage, addHarassmentEvent } = useConversationStore()
   const [currentConvId, setCurrentConvId] = useState<string | null>(null)
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -169,6 +169,21 @@ export default function ChatPage() {
     // Save to shared conversation store
     const convId = ensureConversation(userMsg)
     addMessage(convId, toLiveMessage('customer', userMsg, harassment.score > 0 ? harassment : undefined))
+
+    // Record harassment event if detected (for real-time analytics)
+    if (harassment.score > 0) {
+      const now = new Date()
+      addHarassmentEvent({
+        id: `harass_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        conversationId: convId,
+        timestamp: now.toISOString(),
+        date: now.toISOString().split('T')[0],
+        score: harassment.score,
+        severity: harassment.severity,
+        keywords: harassment.detectedKeywords,
+        customerMessage: userMsg,
+      })
+    }
 
     // Show harassment alert if detected
     if (harassment.severity === 'critical' || harassment.severity === 'high') {
