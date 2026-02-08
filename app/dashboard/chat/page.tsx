@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { FAQ_RESPONSES, detectHarassment } from '@/lib/mock-data'
+import { detectHarassment } from '@/lib/mock-data'
 import { useAuth } from '@/lib/auth-context'
 
 interface Message {
