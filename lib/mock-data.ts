@@ -370,8 +370,6 @@ export function analyzeSentiment(message: string): {
   const msg = message.toLowerCase()
   let angerScore = 0
   let positiveScore = 0
-  let negativeScore = 0
-
   for (const kw of ANGER_KEYWORDS) {
     if (msg.includes(kw.toLowerCase()) || message.includes(kw)) angerScore++
   }
@@ -385,7 +383,6 @@ export function analyzeSentiment(message: string): {
 
   if (angerScore >= 2) return { sentiment: 'anger', confidence: Math.min(0.95, 0.6 + angerScore * 0.1), isAnger: true }
   if (angerScore >= 1) {
-    negativeScore += 1
     return { sentiment: 'negative', confidence: 0.7, isAnger: false }
   }
   if (positiveScore >= 1) return { sentiment: 'positive', confidence: Math.min(0.95, 0.6 + positiveScore * 0.1), isAnger: false }
