@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
+import { usePathname } from 'next/navigation'
+import { useAuth, AuthGate } from '@/lib/auth-context'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
@@ -16,30 +16,20 @@ const NAV_ITEMS = [
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthGate requireAuth redirectTo="/">
+      <DashboardShell>{children}</DashboardShell>
+    </AuthGate>
+  )
+}
+
+function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const router = useRouter()
-  const { user, isLoading, logout } = useAuth()
+  const { user, logout } = useAuth()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/')
-    }
-  }, [user, isLoading, router])
-
-  if (isLoading || !user) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex items-center gap-3">
-          <svg className="animate-spin h-6 w-6 text-brand-600" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          <span className="text-slate-600">読み込み中...</span>
-        </div>
-      </div>
-    )
-  }
+  // AuthGate guarantees user is non-null here
+  if (!user) return null
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard'
